@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Loader2, Shield, CheckCircle, AlertCircle, Play } from 'lucide-react'
+import { ArrowLeft, Loader2, Shield, CheckCircle, Play } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 export default function ActionDetailPage() {
@@ -45,7 +45,7 @@ export default function ActionDetailPage() {
       const payload = {
         action: actionId,
         target_agents: action?.target_agents || ['support'],
-        data: {  // ✅ This was missing before!
+        data: {  // ✅ THIS WAS MISSING!
           order_id: formData.order_id || `ORD-${Date.now()}`,
           amount: parseFloat(formData.amount) || 500,
           reason: formData.reason || 'Demo'
@@ -72,11 +72,12 @@ export default function ActionDetailPage() {
           trace_id: `trace_${Date.now()}`,
           total_duration_ms: 1200,
           policy_decision: 'ALLOW',
+          risk_score: action?.risk_level === 'high' ? 75 : action?.risk_level === 'medium' ? 50 : 25,
           created_at: new Date().toISOString()
         }
       }
 
-      // ✅ SAVE WORKFLOW TO localStorage
+      // Save workflow
       const newWorkflow = {
         id: workflowResult.workflow_id,
         action_id: actionId,
@@ -88,9 +89,26 @@ export default function ActionDetailPage() {
         total_duration_ms: workflowResult.total_duration_ms,
         policy_decision: workflowResult.policy_decision,
       }
-      const existing = JSON.parse(localStorage.getItem('workflows') || '[]')
-      existing.unshift(newWorkflow)
-      localStorage.setItem('workflows', JSON.stringify(existing))
+      const existingWf = JSON.parse(localStorage.getItem('workflows') || '[]')
+      existingWf.unshift(newWorkflow)
+      localStorage.setItem('workflows', JSON.stringify(existingWf))
+
+      // Create audit log
+      const auditLog = {
+        id: `audit_${Date.now()}`,
+        trace_id: workflowResult.trace_id,
+        workflow_id: workflowResult.workflow_id,
+        action_id: actionId,
+        user_id: 'usr_demo',
+        status: workflowResult.status,
+        policy_decision: workflowResult.policy_decision || 'ALLOW',
+        risk_score: workflowResult.risk_score || 25,
+        created_at: new Date().toISOString(),
+        details: payload.data
+      }
+      const existingAudit = JSON.parse(localStorage.getItem('audit_logs') || '[]')
+      existingAudit.unshift(auditLog)
+      localStorage.setItem('audit_logs', JSON.stringify(existingAudit))
 
       setResult(workflowResult)
       toast({ title: '✅ Executed!', description: `Workflow: ${workflowResult.workflow_id}` })

@@ -118,7 +118,7 @@ export default function DashboardPage() {
         <motion.section className="space-y-4">
           <div className="flex items-center justify-between">
             <div><h3 className="text-lg font-semibold">Recent Workflows</h3><p className="text-sm text-slate-500">Latest executions</p></div>
-            <Link href="/workflows" className="text-sm text-blue-600 hover:underline flex items-center gap-1">View all <ArrowRight className="h-4 w-4"/></Link>
+            <div className="flex items-center gap-4"><Link href="/workflows" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Workflows <ArrowRight className="h-4 w-4"/></Link><Link href="/audit" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Audit Logs <ArrowRight className="h-4 w-4"/></Link></div>
           </div>
           <Card className="card"><CardContent className="p-8 text-center text-slate-500"><Activity className="h-8 w-8 mx-auto mb-3 opacity-50"/><p className="text-sm">Execute an action to see workflows here</p><Link href="/actions"><Button variant="outline" className="mt-4">Execute Action</Button></Link></CardContent></Card>
         </motion.section>

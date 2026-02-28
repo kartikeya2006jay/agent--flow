@@ -34,7 +34,6 @@ export default function WorkflowsPage() {
     setIsLoading(true)
     try {
       const stored = JSON.parse(localStorage.getItem('workflows') || '[]')
-      // Demo data if empty
       if (stored.length === 0) {
         setWorkflows([
           { id: 'wf_demo_1', action_id: 'approve_refund', status: 'completed', progress: 100, created_at: new Date(Date.now() - 3600000).toISOString(), trace_id: 'trace_abc', result: { ticket_id: 'TKT-001' } },
@@ -50,11 +49,26 @@ export default function WorkflowsPage() {
     }
   }
 
+  // ✅ Live Progress Simulation (without WebSocket hook)
   useEffect(() => {
     loadWorkflows()
-    const handler = (e: StorageEvent) => { if (e.key === 'workflows') loadWorkflows() }
-    window.addEventListener('storage', handler)
-    return () => window.removeEventListener('storage', handler)
+    
+    // Simulate live progress updates
+    const interval = setInterval(() => {
+      const stored = JSON.parse(localStorage.getItem('workflows') || '[]')
+      const running = stored.find((w: any) => w.status === 'running' && w.progress < 100)
+      
+      if (running) {
+        const newProgress = Math.min(100, running.progress + 10)
+        running.progress = newProgress
+        running.status = newProgress === 100 ? 'completed' : 'running'
+        running.updated_at = new Date().toISOString()
+        localStorage.setItem('workflows', JSON.stringify(stored))
+        setWorkflows([...stored])
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const filtered = workflows.filter(w => {
