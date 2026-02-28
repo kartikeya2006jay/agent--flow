@@ -1,0 +1,8 @@
+- id: auto-approve-small
+  if: {action: approve_refund, amount_threshold: 1000, amount_operator: lt}
+  decision: ALLOW
+  reason: "Small refunds auto-approved"
+- id: require-approval-large
+  if: {action: approve_refund, amount_threshold: 1000, amount_operator: gte}
+  decision: REQUIRE_APPROVAL
+  reason: "Large refunds need approval"
