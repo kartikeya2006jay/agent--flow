@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, Search, Filter, Download, Shield, CheckCircle, AlertCircle, Clock, FileText, User, Bot } from 'lucide-react'
+import { ArrowLeft, Search, Filter, Download, Shield, CheckCircle, AlertCircle, Clock, FileText, User } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface AuditLog {
@@ -16,6 +16,7 @@ interface AuditLog {
   trace_id: string
   workflow_id: string
   action_id: string
+  action_name?: string
   user_id: string
   status: string
   policy_decision: string
@@ -31,27 +32,33 @@ export default function AuditPage() {
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  useEffect(() => {
-    // Load from localStorage (or backend in production)
-    const stored = JSON.parse(localStorage.getItem('audit_logs') || '[]')
-    
-    // Demo data if empty
-    if (stored.length === 0) {
-      const demoLogs: AuditLog[] = [
-        { id: 'audit_1', trace_id: 'trace_abc123', workflow_id: 'wf_001', action_id: 'approve_refund', user_id: 'usr_demo', status: 'completed', policy_decision: 'ALLOW', risk_score: 25, created_at: new Date(Date.now() - 3600000).toISOString(), details: { amount: 500, order_id: 'ORD-001' } },
-        { id: 'audit_2', trace_id: 'trace_def456', workflow_id: 'wf_002', action_id: 'onboard_employee', user_id: 'usr_demo', status: 'completed', policy_decision: 'ALLOW', risk_score: 15, created_at: new Date(Date.now() - 7200000).toISOString(), details: { employee_id: 'EMP-001' } },
-        { id: 'audit_3', trace_id: 'trace_ghi789', workflow_id: 'wf_003', action_id: 'issue_payment', user_id: 'usr_demo', status: 'pending', policy_decision: 'REQUIRE_APPROVAL', risk_score: 75, created_at: new Date(Date.now() - 1800000).toISOString(), details: { amount: 5000, vendor: 'Acme Corp' } },
-      ]
-      setLogs(demoLogs)
-      localStorage.setItem('audit_logs', JSON.stringify(demoLogs))
-    } else {
-      setLogs(stored)
+  const loadLogs = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('agentflow_audit_logs') || '[]')
+      if (stored.length === 0) {
+        const demo: AuditLog[] = [
+          { id: `audit_${Math.random().toString(36).substring(2,8)}`, trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, workflow_id: `wf_${Math.random().toString(36).substring(2,8)}`, action_id: 'approve_refund', action_name: 'Approve Refund', user_id: 'usr_demo', status: 'completed', policy_decision: 'ALLOW', risk_score: 25, created_at: new Date(Date.now()-3600000).toISOString(), details: { amount: 500 } },
+          { id: `audit_${Math.random().toString(36).substring(2,8)}`, trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, workflow_id: `wf_${Math.random().toString(36).substring(2,8)}`, action_id: 'issue_payment', action_name: 'Issue Payment', user_id: 'usr_demo', status: 'pending', policy_decision: 'REQUIRE_APPROVAL', risk_score: 75, created_at: new Date(Date.now()-1800000).toISOString(), details: { amount: 5000 } },
+        ]
+        setLogs(demo)
+      } else {
+        setLogs(stored)
+      }
+    } catch (e) {
+      setLogs([])
     }
+  }
+
+  useEffect(() => {
+    loadLogs()
+    const handler = (e: StorageEvent) => { if (e.key === 'agentflow_audit_logs') loadLogs() }
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
   }, [])
 
   const filtered = logs.filter(log => {
     const okStatus = filter === 'all' || log.status === filter
-    const okSearch = !searchQuery || log.action_id?.toLowerCase().includes(searchQuery.toLowerCase()) || log.trace_id?.toLowerCase().includes(searchQuery.toLowerCase())
+    const okSearch = !searchQuery || log.action_name?.toLowerCase().includes(searchQuery.toLowerCase()) || log.trace_id?.toLowerCase().includes(searchQuery.toLowerCase())
     return okStatus && okSearch
   })
 
@@ -64,14 +71,14 @@ export default function AuditPage() {
 
   const exportLogs = () => {
     const csv = 'ID,Trace ID,Action,User,Status,Policy Decision,Risk Score,Created At\n' + 
-      logs.map(l => `${l.id},${l.trace_id},${l.action_id},${l.user_id},${l.status},${l.policy_decision},${l.risk_score},${l.created_at}`).join('\n')
+      logs.map(l => `${l.id},${l.trace_id},${l.action_name || l.action_id},${l.user_id},${l.status},${l.policy_decision},${l.risk_score},${l.created_at}`).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`
     a.click()
-    toast({ title: '✅ Exported!', description: 'Audit logs downloaded as CSV' })
+    toast({ title: '✅ Exported!', description: 'Audit logs downloaded' })
   }
 
   return (
@@ -87,15 +94,13 @@ export default function AuditPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-slate-900">{stats.total}</div><div className="text-xs text-slate-500">Total Logs</div></CardContent></Card>
+          <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-slate-900">{stats.total}</div><div className="text-xs text-slate-500">Total</div></CardContent></Card>
           <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-green-600">{stats.allowed}</div><div className="text-xs text-slate-500">Allowed</div></CardContent></Card>
           <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-red-600">{stats.denied}</div><div className="text-xs text-slate-500">Denied</div></CardContent></Card>
           <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-orange-600">{stats.approval}</div><div className="text-xs text-slate-500">Needs Approval</div></CardContent></Card>
         </div>
 
-        {/* Filters */}
         <Card className="card">
           <CardContent className="p-4">
             <div className="flex gap-4">
@@ -109,14 +114,12 @@ export default function AuditPage() {
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
         </Card>
 
-        {/* Logs List */}
         {filtered.length === 0 ? (
           <Card className="card"><CardContent className="p-12 text-center"><Shield className="h-12 w-12 text-slate-400 mx-auto mb-4"/><h3 className="text-lg font-semibold mb-2">No audit logs</h3><p className="text-slate-600">Execute actions to create audit entries</p></CardContent></Card>
         ) : (
@@ -132,7 +135,7 @@ export default function AuditPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-semibold text-slate-900 truncate">{log.action_id}</h4>
+                            <h4 className="font-semibold text-slate-900 truncate">{log.action_name || log.action_id}</h4>
                             <Badge className={log.policy_decision === 'ALLOW' ? 'bg-green-100 text-green-800' : log.policy_decision === 'DENY' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}>{log.policy_decision}</Badge>
                           </div>
                           <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
