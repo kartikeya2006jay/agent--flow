@@ -20,7 +20,6 @@ interface AuditLog {
   user_id: string
   status: string
   policy_decision: string
-  risk_score: number
   created_at: string
   details: any
 }
@@ -37,8 +36,8 @@ export default function AuditPage() {
       const stored = JSON.parse(localStorage.getItem('agentflow_audit_logs') || '[]')
       if (stored.length === 0) {
         const demo: AuditLog[] = [
-          { id: `audit_${Math.random().toString(36).substring(2,8)}`, trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, workflow_id: `wf_${Math.random().toString(36).substring(2,8)}`, action_id: 'approve_refund', action_name: 'Approve Refund', user_id: 'usr_demo', status: 'completed', policy_decision: 'ALLOW', risk_score: 25, created_at: new Date(Date.now()-3600000).toISOString(), details: { amount: 500 } },
-          { id: `audit_${Math.random().toString(36).substring(2,8)}`, trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, workflow_id: `wf_${Math.random().toString(36).substring(2,8)}`, action_id: 'issue_payment', action_name: 'Issue Payment', user_id: 'usr_demo', status: 'pending', policy_decision: 'REQUIRE_APPROVAL', risk_score: 75, created_at: new Date(Date.now()-1800000).toISOString(), details: { amount: 5000 } },
+          { id: `audit_${Math.random().toString(36).substring(2,8)}`, trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, workflow_id: `wf_${Math.random().toString(36).substring(2,8)}`, action_id: 'approve_refund', action_name: 'Approve Refund', user_id: 'usr_demo', status: 'completed', policy_decision: 'ALLOW', created_at: new Date(Date.now()-3600000).toISOString(), details: { amount: 500 } },
+          { id: `audit_${Math.random().toString(36).substring(2,8)}`, trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, workflow_id: `wf_${Math.random().toString(36).substring(2,8)}`, action_id: 'issue_payment', action_name: 'Issue Payment', user_id: 'usr_demo', status: 'pending', policy_decision: 'REQUIRE_APPROVAL', created_at: new Date(Date.now()-1800000).toISOString(), details: { amount: 5000 } },
         ]
         setLogs(demo)
       } else {
@@ -70,8 +69,8 @@ export default function AuditPage() {
   }
 
   const exportLogs = () => {
-    const csv = 'ID,Trace ID,Action,User,Status,Policy Decision,Risk Score,Created At\n' + 
-      logs.map(l => `${l.id},${l.trace_id},${l.action_name || l.action_id},${l.user_id},${l.status},${l.policy_decision},${l.risk_score},${l.created_at}`).join('\n')
+    const csv = 'ID,Trace ID,Action,User,Status,Policy Decision,Created At\n' + 
+      logs.map(l => `${l.id},${l.trace_id},${l.action_name || l.action_id},${l.user_id},${l.status},${l.policy_decision},${l.created_at}`).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -94,10 +93,9 @@ export default function AuditPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-slate-900">{stats.total}</div><div className="text-xs text-slate-500">Total</div></CardContent></Card>
           <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-green-600">{stats.allowed}</div><div className="text-xs text-slate-500">Allowed</div></CardContent></Card>
-          <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-red-600">{stats.denied}</div><div className="text-xs text-slate-500">Denied</div></CardContent></Card>
           <Card className="card"><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-orange-600">{stats.approval}</div><div className="text-xs text-slate-500">Needs Approval</div></CardContent></Card>
         </div>
 
@@ -141,7 +139,6 @@ export default function AuditPage() {
                           <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
                             <span className="flex items-center gap-1"><FileText className="h-3 w-3"/>Trace: <code className="bg-slate-100 px-2 py-0.5 rounded text-xs">{log.trace_id}</code></span>
                             <span className="flex items-center gap-1"><User className="h-3 w-3"/>User: {log.user_id}</span>
-                            <span className="flex items-center gap-1"><Shield className="h-3 w-3"/>Risk: <span className={log.risk_score > 50 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>{log.risk_score}/100</span></span>
                           </div>
                           <p className="text-xs text-slate-400 mt-1">Created: {new Date(log.created_at).toLocaleString()}</p>
                         </div>

@@ -1,56 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-// Initialize OpenAI client (server-side only)
+// Initialize OpenAI client (server-side only - key never exposed to browser)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-// RAG context retrieval mock (replace with real vector DB)
-async function retrieveContext(query: string, domain?: string): Promise<string[]> {
-  // Mock context based on domain - replace with Chroma/Pinecone in prod
-  const contexts: Record<string, string[]> = {
-    finance: [
-      'Company policy: Refunds under $1000 auto-approved for verified customers',
-      'Compliance: All financial transactions require audit trail with trace_id',
-      'Risk threshold: Transactions >$5000 require dual approval',
-    ],
-    hr: [
-      'Onboarding checklist: IT setup, benefits enrollment, manager intro',
-      'Compliance: Employee data must be encrypted at rest (GDPR Article 32)',
-      'Approval: Department head sign-off required for role changes',
-    ],
-    devops: [
-      'Incident response: P1 tickets require page to on-call engineer',
-      'Change management: All production deploys require PR + approval',
-      'Security: Secrets must be stored in Vault, never in code',
-    ],
-    default: [
-      'Policy: All agent actions require policy evaluation before execution',
-      'Audit: Every workflow generates immutable log entry with trace_id',
-      'Governance: High-risk actions trigger human-in-loop approval',
-    ],
-  }
-  
-  return contexts[domain || 'default'] || contexts.default
+// Enterprise knowledge base for RAG context
+const KNOWLEDGE_BASE = {
+  policies: [
+    'Refunds under $1000 are auto-approved for verified customers',
+    'Payments over $5000 require dual approval (finance + manager)',
+    'Employee onboarding requires IT setup + benefits enrollment',
+    'All actions generate immutable audit trails with trace_id',
+    'High-risk actions (score >70) require executive approval',
+  ],
+  compliance: [
+    'GDPR: All PII must be redacted before agent processing',
+    'SOX: Financial transactions require audit trail retention (7 years)',
+    'HIPAA: PHI must be encrypted at rest and in transit',
+    'PCI-DSS: Payment data must be tokenized, never stored raw',
+  ],
+  workflows: [
+    'Approve Refund: Support → Finance agents, auto-approve <$1000',
+    'Onboard Employee: HR → IT/Ops agents, 2-3 business days',
+    'Issue Payment: Finance agent only, dual approval >$5000',
+    'Create Ticket: Support agent only, SLA based on priority',
+  ]
 }
 
-// System prompt for RAG-enhanced responses
-function buildSystemPrompt(domain: string, context: string[]): string {
-  return `You are an expert assistant for ${domain} workflows in AgentFlow OS, 
-a governed multi-agent orchestration platform. 
+// Build context-aware system prompt
+function buildSystemPrompt(domain: string): string {
+  return `You are an expert assistant for AgentFlow OS, a governed multi-agent orchestration platform for enterprises.
 
-Context from knowledge base:
-${context.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+CONTEXT FROM KNOWLEDGE BASE:
+${KNOWLEDGE_BASE.policies.map(p => `• ${p}`).join('\n')}
+${KNOWLEDGE_BASE.compliance.map(c => `• ${c}`).join('\n')}
+${KNOWLEDGE_BASE.workflows.map(w => `• ${w}`).join('\n')}
 
-Guidelines:
+DOMAIN: ${domain}
+
+GUIDELINES:
 - Answer questions about agent workflows, governance, and compliance
 - Reference specific policies when relevant
+- Be concise and actionable (max 300 words)
 - If unsure, ask for clarification rather than guessing
-- Keep responses concise and actionable
 - Never expose internal system details or API keys
+- Format responses with clear sections using **bold** for emphasis
+- Include practical examples when helpful
 
-User is asking about: ${domain} workflows`
+USER IS ASKING ABOUT: ${domain} workflows`
 }
 
 export async function POST(request: NextRequest) {
@@ -61,39 +60,34 @@ export async function POST(request: NextRequest) {
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
-    
-    // Retrieve RAG context
-    const context = await retrieveContext(message, domain)
-    
-    // Build messages for OpenAI
-    const messages = [
-      { role: 'system', content: buildSystemPrompt(domain, context) },
-      ...conversationHistory.slice(-5), // Keep last 5 messages for context
-      { role: 'user', content: message },
-    ]
-    
-    // Mock mode for development (no API calls)
-    if (process.env.MOCK_LLM === 'true') {
-      await new Promise(resolve => setTimeout(resolve, 800)) // Simulate latency
+
+    // Check if API key is configured
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your-api-key-here') {
       return NextResponse.json({
-        reply: `[MOCK MODE] Based on ${domain} policies: ${context[0]}\n\nFor "${message}", I recommend: Execute the action through the governed workflow with policy check → risk assessment → approval (if needed) → execution → audit log.`,
-        sources: context,
-        model: process.env.OPENAI_DEFAULT_MODEL || 'gpt-4o-mini',
+        reply: `⚠️ OpenAI API key not configured. Please add your API key to .env.local:\n\nOPENAI_API_KEY=sk-...\n\nFor now, here's a helpful response:\n\nI can help you with ${domain} workflows including policy questions, execution guidance, and compliance requirements. What would you like to know?`,
+        sources: ['Configuration Required'],
         mock: true,
       })
     }
     
-    // Real OpenAI call (production)
+    // Build messages for OpenAI
+    const messages = [
+      { role: 'system', content: buildSystemPrompt(domain) },
+      ...conversationHistory.slice(-5).map((m: any) => ({ role: m.role, content: m.content })),
+      { role: 'user', content: message },
+    ]
+    
+    // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_DEFAULT_MODEL || 'gpt-4o-mini',
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       messages: messages as any,
-      max_tokens: parseInt(process.env.OPENAI_MAX_TOKENS || '2048'),
-      temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.3'),
+      max_tokens: parseInt(process.env.OPENAI_MAX_TOKENS || '500'),
+      temperature: 0.3,
     })
     
     return NextResponse.json({
       reply: completion.choices[0]?.message?.content || 'No response generated',
-      sources: context,
+      sources: ['AgentFlow Knowledge Base', 'Policy Documentation', 'Compliance Guidelines'],
       model: completion.model,
       usage: completion.usage,
       mock: false,
@@ -104,8 +98,9 @@ export async function POST(request: NextRequest) {
     
     // Fallback response for errors
     return NextResponse.json({
-      reply: "I'm having trouble connecting to the knowledge base. Please try again or contact support.",
+      reply: `I'm having trouble connecting to the knowledge base right now. Here's what I can tell you about ${domain} workflows:\n\n• All actions require policy evaluation before execution\n• Risk assessment determines approval flow (auto/HITL/dual)\n• Every step is logged with immutable trace_id\n• Compliance tags are auto-applied (GDPR/SOX/HIPAA)\n\nPlease try again or contact support if the issue persists.`,
       error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      sources: ['Fallback Response'],
       mock: true,
     }, { status: 500 })
   }
