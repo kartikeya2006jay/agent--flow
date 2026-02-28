@@ -42,9 +42,9 @@ export function CreateAgentModal({ open, onOpenChange, onCreated }: CreateAgentM
         estimated_cost: parseFloat(formData.estimated_cost) || 0.01,
         compliance_tags: formData.compliance_tags.split(',').map((t:string) => t.trim()).filter(Boolean),
       }
-      const existing = JSON.parse(localStorage.getItem('custom_actions') || '[]')
+      const existing = JSON.parse(localStorage.getItem('agentflow_custom_actions') || '[]')
       existing.push(newAction)
-      localStorage.setItem('custom_actions', JSON.stringify(existing))
+      localStorage.setItem('agentflow_custom_actions', JSON.stringify(existing))
       toast({ title: '✅ Created!', description: `${formData.name} added to Action Library` })
       onCreated?.(newAction)
       setFormData({ name: '', description: '', agents: [], risk_level: 'medium', estimated_cost: '0.01', compliance_tags: '' })

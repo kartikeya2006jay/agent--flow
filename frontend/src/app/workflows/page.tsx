@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +16,7 @@ interface Workflow {
   action_id: string
   action_name?: string
   status: string
-  progress?: number
+  progress: number
   created_at: string
   trace_id?: string
   result?: any
@@ -31,57 +31,57 @@ export default function WorkflowsPage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   const loadWorkflows = () => {
-    console.log('🔵 Loading workflows from localStorage...')
     try {
       const stored = localStorage.getItem('agentflow_workflows')
-      console.log('🔵 Raw localStorage data:', stored)
-      
       const parsed = stored ? JSON.parse(stored) : []
-      console.log('🔵 Parsed workflows:', parsed.length)
       
       if (parsed.length === 0) {
         const demo: Workflow[] = [
-          { id: `wf_${Math.random().toString(36).substring(2,8)}`, action_id: 'approve_refund', action_name: 'Approve Refund', status: 'completed', progress: 100, created_at: new Date(Date.now()-3600000).toISOString(), trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, result: { ticket_id: 'TKT-001' } },
+          { id: `wf_demo_1`, action_id: 'approve_refund', action_name: 'Approve Refund', status: 'running', progress: 45, created_at: new Date(Date.now()-1800000).toISOString(), trace_id: `trace_${Math.random().toString(36).substring(2,8)}` },
+          { id: `wf_demo_2`, action_id: 'onboard_employee', action_name: 'Onboard Employee', status: 'completed', progress: 100, created_at: new Date(Date.now()-3600000).toISOString(), trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, result: { ticket_id: 'TKT-001' } },
         ]
         setWorkflows(demo)
-        console.log('🔵 Using demo data')
       } else {
         setWorkflows(parsed)
-        console.log('✅ Loaded', parsed.length, 'workflows from localStorage')
       }
     } catch (e) {
-      console.error('❌ Load workflows error:', e)
       setWorkflows([])
     } finally {
       setIsLoading(false)
     }
   }
 
+  // ✅ REAL-TIME PROGRESS UPDATES
   useEffect(() => {
     loadWorkflows()
     
-    const handler = () => {
-      console.log('🔵 Storage event detected, reloading workflows...')
-      loadWorkflows()
-    }
-    window.addEventListener('storage', handler)
-    window.addEventListener('workflow-updated', handler)
+    // Listen for storage changes from other tabs/windows
+    const handleStorage = () => loadWorkflows()
+    window.addEventListener('storage', handleStorage)
     
-    const interval = setInterval(() => {
-      const stored = JSON.parse(localStorage.getItem('agentflow_workflows') || '[]')
-      const running = stored.find((w: any) => w.status === 'running' && w.progress < 100)
-      if (running) {
-        running.progress = Math.min(100, running.progress + 15)
-        if (running.progress === 100) running.status = 'completed'
-        localStorage.setItem('agentflow_workflows', JSON.stringify(stored))
-        setWorkflows([...stored])
-      }
-    }, 2000)
+    // ✅ Simulate live progress for running workflows
+    const progressInterval = setInterval(() => {
+      setWorkflows(prev => {
+        const updated = prev.map(wf => {
+          if (wf.status === 'running' && wf.progress < 100) {
+            const newProgress = Math.min(100, wf.progress + Math.random() * 15 + 5)
+            return {
+              ...wf,
+              progress: Math.round(newProgress),
+              status: newProgress >= 100 ? 'completed' : 'running'
+            }
+          }
+          return wf
+        })
+        // Save updated progress to localStorage
+        localStorage.setItem('agentflow_workflows', JSON.stringify(updated))
+        return updated
+      })
+    }, 2000) // Update every 2 seconds for smooth animation
 
     return () => {
-      window.removeEventListener('storage', handler)
-      window.removeEventListener('workflow-updated', handler)
-      clearInterval(interval)
+      window.removeEventListener('storage', handleStorage)
+      clearInterval(progressInterval)
     }
   }, [])
 
@@ -141,39 +141,57 @@ export default function WorkflowsPage() {
           <Card className="card"><CardContent className="p-12 text-center"><Bot className="h-12 w-12 text-slate-400 mx-auto mb-4"/><h3 className="text-lg font-semibold mb-2">No workflows yet</h3><p className="text-slate-600 mb-4">Execute an action to create your first workflow</p><Link href="/actions"><Button className="btn-primary gap-2"><Play className="h-4 w-4"/>Execute Action</Button></Link></CardContent></Card>
         ) : (
           <div className="space-y-4">
-            {filtered.map((wf, i) => (
-              <motion.div key={wf.id} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:i*0.05}}>
-                <Card className="card border border-slate-200 hover:border-blue-500/50 transition-all">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex items-start gap-4 flex-1 min-w-0">
-                        <div className={`p-2 rounded-lg ${wf.status === 'completed' ? 'bg-green-100' : 'bg-blue-100'}`}>
-                          {wf.status === 'completed' ? <CheckCircle className="h-4 w-4 text-green-600"/> : <Clock className="h-4 w-4 text-blue-600"/>}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-semibold text-slate-900 truncate">{wf.action_name || wf.action_id}</h4>
-                            <Badge className={wf.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>{wf.status}</Badge>
+            <AnimatePresence>
+              {filtered.map((wf, i) => (
+                <motion.div key={wf.id} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}} transition={{delay:i*0.05}}>
+                  <Card className="card border border-slate-200 hover:border-blue-500/50 transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4 flex-1 min-w-0">
+                          <div className={`p-2 rounded-lg ${wf.status === 'completed' ? 'bg-green-100' : 'bg-blue-100'}`}>
+                            {wf.status === 'completed' ? <CheckCircle className="h-4 w-4 text-green-600"/> : <Clock className="h-4 w-4 text-blue-600 animate-pulse"/>}
                           </div>
-                          <p className="text-sm text-slate-500 mt-1 font-mono text-xs bg-slate-100 px-2 py-0.5 rounded inline-block">{wf.id}</p>
-                          {wf.trace_id && <p className="text-xs text-slate-400 mt-1 font-mono">Trace: {wf.trace_id}</p>}
-                          <p className="text-xs text-slate-400 mt-1">Created: {new Date(wf.created_at).toLocaleString()}</p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-semibold text-slate-900 truncate">{wf.action_name || wf.action_id}</h4>
+                              <Badge className={wf.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>{wf.status}</Badge>
+                            </div>
+                            <p className="text-sm text-slate-500 mt-1 font-mono text-xs bg-slate-100 px-2 py-0.5 rounded inline-block">{wf.id}</p>
+                            {wf.trace_id && <p className="text-xs text-slate-400 mt-1 font-mono">Trace: {wf.trace_id}</p>}
+                            <p className="text-xs text-slate-400 mt-1">Created: {new Date(wf.created_at).toLocaleString()}</p>
+                          </div>
                         </div>
-                      </div>
-                      {wf.progress !== undefined && wf.progress < 100 && (
+                        
+                        {/* ✅ LIVE PROGRESS BAR */}
                         <div className="lg:w-48">
-                          <div className="flex items-center justify-between text-xs text-slate-500 mb-1"><span>Progress</span><span>{wf.progress}%</span></div>
-                          <div className="h-2 rounded-full bg-slate-200 overflow-hidden"><div className="h-full bg-blue-600 rounded-full transition-all" style={{width:`${wf.progress}%`}}/></div>
+                          <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                            <span>Progress</span>
+                            <span className="font-medium text-blue-600">{wf.progress}%</span>
+                          </div>
+                          <div className="h-2.5 rounded-full bg-slate-200 overflow-hidden">
+                            <motion.div 
+                              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
+                              initial={{ width: `${wf.progress - 10}%` }}
+                              animate={{ width: `${wf.progress}%` }}
+                              transition={{ duration: 1.5, ease: "easeOut" }}
+                            />
+                          </div>
+                          {wf.status === 'running' && (
+                            <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                              <Loader2 className="h-3 w-3 animate-spin"/> Processing...
+                            </p>
+                          )}
                         </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="gap-1" onClick={() => router.push(`/workflows/${wf.id}`)}><Eye className="h-4 w-4"/>View</Button>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" className="gap-1" onClick={() => router.push(`/workflows/${wf.id}`)}><Eye className="h-4 w-4"/>View</Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </main>
