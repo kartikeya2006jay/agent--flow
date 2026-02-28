@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CreateAgentModal } from '@/components/agents/create-agent-modal'
-import { RAGChatbot } from '@/components/rag/rag-chatbot'
+import { AIAssistant } from '@/components/ai/ai-assistant'
 import { Bot, TrendingUp, Shield, Activity, CheckCircle, ArrowRight, Plus, Zap, GitBranch, Database, Sparkles } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -24,12 +24,11 @@ export default function DashboardPage() {
       { id: 'issue_payment', name: 'Issue Payment', target_agents: ['finance'], risk_level: 'high', estimated_cost: 0.05 },
       { id: 'update_crm', name: 'Update CRM', target_agents: ['sales'], risk_level: 'low', estimated_cost: 0.01 },
     ]
-    const custom = JSON.parse(localStorage.getItem('custom_actions') || '[]')
+    const custom = JSON.parse(localStorage.getItem('agentflow_custom_actions') || '[]')
     setActions([...builtIn, ...custom])
   }, [])
 
   const handleAgentCreated = (newAction: any) => { setActions(prev => [...prev, newAction]) }
-
   const stats = { totalActions: actions.length, successRate: 95 }
 
   const getIcon = (agents?: string[]) => {
@@ -42,7 +41,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 pb-20">
       <header className="border-b bg-white/80 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -77,7 +76,11 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <div><h3 className="text-lg font-semibold">Quick Actions</h3><p className="text-sm text-slate-500">Execute governed workflows</p></div>
-              <Link href="/actions" className="text-sm text-blue-600 hover:underline flex items-center gap-1">View all <ArrowRight className="h-4 w-4"/></Link>
+              <div className="flex items-center gap-4">
+                <Link href="/agents" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Agents <ArrowRight className="h-4 w-4"/></Link>
+                <Link href="/workflows" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Workflows <ArrowRight className="h-4 w-4"/></Link>
+                <Link href="/audit" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Audit <ArrowRight className="h-4 w-4"/></Link>
+              </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {actions.slice(0, 4).map((action) => {
@@ -118,14 +121,14 @@ export default function DashboardPage() {
         <motion.section className="space-y-4">
           <div className="flex items-center justify-between">
             <div><h3 className="text-lg font-semibold">Recent Workflows</h3><p className="text-sm text-slate-500">Latest executions</p></div>
-            <div className="flex items-center gap-4"><Link href="/workflows" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Workflows <ArrowRight className="h-4 w-4"/></Link><Link href="/audit" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Audit Logs <ArrowRight className="h-4 w-4"/></Link></div>
+            <Link href="/workflows" className="text-sm text-blue-600 hover:underline flex items-center gap-1">View all <ArrowRight className="h-4 w-4"/></Link>
           </div>
           <Card className="card"><CardContent className="p-8 text-center text-slate-500"><Activity className="h-8 w-8 mx-auto mb-3 opacity-50"/><p className="text-sm">Execute an action to see workflows here</p><Link href="/actions"><Button variant="outline" className="mt-4">Execute Action</Button></Link></CardContent></Card>
         </motion.section>
       </main>
 
       <CreateAgentModal open={isCreateAgentOpen} onOpenChange={setIsCreateAgentOpen} onCreated={handleAgentCreated}/>
-      <RAGChatbot domain="dashboard" placeholder="Ask about agents, workflows..." compact />
+      <AIAssistant />
     </div>
   )
 }
