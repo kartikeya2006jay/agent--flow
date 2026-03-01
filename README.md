@@ -1,4 +1,4 @@
-# 🤖 AgentFlow OS
+#  AgentFlow OS
 
 > **Multi-Agent Governance Middleware** - Enterprise-grade orchestration platform for autonomous agent workflows with policy enforcement, risk assessment, and human-in-the-loop approvals.
 
@@ -694,5 +694,5 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 
 ---
 
-**Built with ❤️ by Kartikeya Yadav, Abdul Kalam, Ashna Adeel Siddique, Shivendu Kumar, Riddhi Shah
-Last Updated: March 1, 2026
+**Built by Kartikeya Yadav, Abdul Kalam, Ashna Adeel Siddique, Shivendu Kumar, Riddhi Shah
+
