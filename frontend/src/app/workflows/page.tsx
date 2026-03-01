@@ -332,7 +332,7 @@ export default function WorkflowsPage() {
                             {wf.trace_id && (
                               <p className="text-xs text-slate-400 mt-1 font-mono flex items-center gap-1">
                                 Trace: <span className="text-slate-600">{wf.trace_id}</span>
-                                <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => copyToClipboard(wf.trace_id)}>
+                                <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => copyToClipboard(wf.trace_id ?? '')}>
                                   <Copy className="h-2.5 w-2.5"/>
                                 </Button>
                               </p>

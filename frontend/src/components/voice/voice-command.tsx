@@ -112,7 +112,7 @@ export function VoiceCommand({ compact = false }: { compact?: boolean }) {
           policy_decision: 'ALLOW',
           risk_score: 25,
           created_at: new Date().toISOString(),
-          details: { voice_command: command, order_id }
+          details: { voice_command: command, order_id: orderId }
         }
         const existingAudit = JSON.parse(localStorage.getItem('agentflow_audit_logs') || '[]')
         existingAudit.unshift(audit)

@@ -19,7 +19,7 @@ interface AuthState {
   syncFromStorage: () => void
 }
 
-export const useAuthStore = create<AuthStore>()(
+export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       // Initial state

@@ -4,6 +4,7 @@ export interface User {
   role: string;
   enterprise_id: string;
   permissions: string[];
+  enterprise_type?: string;
   [key: string]: unknown; // Allow additional fields from backend
 }
 

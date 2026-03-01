@@ -53,8 +53,14 @@ USER IS ASKING ABOUT: ${domain} workflows`
 }
 
 export async function POST(request: NextRequest) {
+  // keep domain in outer scope so the catch block can reference it
+  let domain = 'default'
+
   try {
-    const { message, domain = 'default', conversationHistory = [] } = await request.json()
+    const body = await request.json()
+    const message = body.message
+    domain = body.domain || domain
+    const conversationHistory = body.conversationHistory || []
     
     // Validate input
     if (!message || typeof message !== 'string') {
