@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-// Initialize OpenAI client (server-side only - key never exposed to browser)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// helper to create client lazily (ensures env var presence is validated in request handler)
+function createOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey || apiKey === 'your-api-key-here') {
+    return null
+  }
+  return new OpenAI({ apiKey })
+}
 
 // Enterprise knowledge base for RAG context
 const KNOWLEDGE_BASE = {
@@ -68,7 +72,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if API key is configured
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your-api-key-here') {
+    const openai = createOpenAI()
+    if (!openai) {
       return NextResponse.json({
         reply: `⚠️ OpenAI API key not configured. Please add your API key to .env.local:\n\nOPENAI_API_KEY=sk-...\n\nFor now, here's a helpful response:\n\nI can help you with ${domain} workflows including policy questions, execution guidance, and compliance requirements. What would you like to know?`,
         sources: ['Configuration Required'],
