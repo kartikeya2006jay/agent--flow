@@ -131,9 +131,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div><h3 className="text-lg font-semibold">Quick Actions</h3><p className="text-sm text-slate-500">Execute governed workflows</p></div>
               <div className="flex items-center gap-4">
-                <Link href="/agents" target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Agents <ArrowRight className="h-4 w-4"/></Link>
-                <Link href="/workflows" target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Workflows <ArrowRight className="h-4 w-4"/></Link>
-                <Link href="/audit" target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Audit <ArrowRight className="h-4 w-4"/></Link>
+                <Link href="/agents"  className="text-sm text-blue-600 hover:underline flex items-center gap-1">Agents <ArrowRight className="h-4 w-4"/></Link>
+                <Link href="/workflows"  className="text-sm text-blue-600 hover:underline flex items-center gap-1">Workflows <ArrowRight className="h-4 w-4"/></Link>
+                <Link href="/audit"  className="text-sm text-blue-600 hover:underline flex items-center gap-1">Audit <ArrowRight className="h-4 w-4"/></Link>
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -183,7 +183,7 @@ export default function DashboardPage() {
         <motion.section className="space-y-4">
           <div className="flex items-center justify-between">
             <div><h3 className="text-lg font-semibold">Recent Activity</h3><p className="text-sm text-slate-500">Live workflow executions</p></div>
-            <Link href="/workflows" target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">View all <ArrowRight className="h-4 w-4"/></Link>
+            <Link href="/workflows"  className="text-sm text-blue-600 hover:underline flex items-center gap-1">View all <ArrowRight className="h-4 w-4"/></Link>
           </div>
           <Card className="card">
             <CardContent className="p-0">
