@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CreateAgentModal } from '@/components/agents/create-agent-modal'
 import { AIAssistant } from '@/components/ai/ai-assistant'
-import { Bot, TrendingUp, Shield, Activity, CheckCircle, ArrowRight, Plus, Zap, GitBranch, Database, Sparkles, Clock, FileText, Download } from 'lucide-react'
+import { Bot, TrendingUp, Shield, Activity, CheckCircle, ArrowRight, Plus, Zap, GitBranch, Database, Sparkles, FileText, Download, LogOut } from 'lucide-react'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -17,6 +17,14 @@ export default function DashboardPage() {
   const [workflows, setWorkflows] = useState<any[]>([])
   const [audits, setAudits] = useState<any[]>([])
   const [isCreateAgentOpen, setIsCreateAgentOpen] = useState(false)
+
+  // ✅ Check if user is logged in
+  useEffect(() => {
+    const user = localStorage.getItem('agentflow_user')
+    if (!user) {
+      router.push('/login')
+    }
+  }, [router])
 
   const loadData = () => {
     const builtIn = [
@@ -47,6 +55,12 @@ export default function DashboardPage() {
   }, [])
 
   const handleAgentCreated = () => { loadData() }
+
+  const handleLogout = () => {
+    localStorage.removeItem('agentflow_user')
+    localStorage.removeItem('agentflow_token')
+    router.push('/login')
+  }
 
   const stats = {
     totalActions: actions.length,
@@ -83,7 +97,10 @@ export default function DashboardPage() {
             <div className="p-2 rounded-xl bg-blue-600"><Bot className="h-5 w-5 text-white"/></div>
             <div><h1 className="text-xl font-bold">Dashboard</h1><p className="text-sm text-slate-500">Monitor your workflows</p></div>
           </div>
-          <Button onClick={() => setIsCreateAgentOpen(true)} className="bg-blue-600 text-white hover:bg-blue-700 gap-2"><Plus className="h-4 w-4"/>Create Custom Agent</Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1"><LogOut className="h-4 w-4"/>Logout</Button>
+            <Button onClick={() => setIsCreateAgentOpen(true)} className="bg-blue-600 text-white hover:bg-blue-700 gap-2"><Plus className="h-4 w-4"/>Create Custom Agent</Button>
+          </div>
         </div>
       </header>
 
@@ -93,7 +110,6 @@ export default function DashboardPage() {
           <p className="text-slate-600 text-lg">Here's what's happening with your agent workflows.</p>
         </motion.section>
 
-        {/* ✅ REAL-TIME STATS */}
         <motion.section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
             { title: 'Total Actions', value: stats.totalActions, icon: Bot, color: 'text-blue-600' },
@@ -115,9 +131,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div><h3 className="text-lg font-semibold">Quick Actions</h3><p className="text-sm text-slate-500">Execute governed workflows</p></div>
               <div className="flex items-center gap-4">
-                <Link href="/agents" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Agents <ArrowRight className="h-4 w-4"/></Link>
-                <Link href="/workflows" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Workflows <ArrowRight className="h-4 w-4"/></Link>
-                <Link href="/audit" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Audit <ArrowRight className="h-4 w-4"/></Link>
+                <Link href="/agents" target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Agents <ArrowRight className="h-4 w-4"/></Link>
+                <Link href="/workflows" target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Workflows <ArrowRight className="h-4 w-4"/></Link>
+                <Link href="/audit" target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">Audit <ArrowRight className="h-4 w-4"/></Link>
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -154,7 +170,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* ✅ EXPORT BUTTON */}
             <Card className="card">
               <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4"/>Export Data</CardTitle></CardHeader>
               <CardContent>
@@ -165,11 +180,10 @@ export default function DashboardPage() {
           </motion.div>
         </motion.section>
 
-        {/* ✅ LIVE ACTIVITY FEED */}
         <motion.section className="space-y-4">
           <div className="flex items-center justify-between">
             <div><h3 className="text-lg font-semibold">Recent Activity</h3><p className="text-sm text-slate-500">Live workflow executions</p></div>
-            <Link href="/workflows" className="text-sm text-blue-600 hover:underline flex items-center gap-1">View all <ArrowRight className="h-4 w-4"/></Link>
+            <Link href="/workflows" target="_blank" className="text-sm text-blue-600 hover:underline flex items-center gap-1">View all <ArrowRight className="h-4 w-4"/></Link>
           </div>
           <Card className="card">
             <CardContent className="p-0">

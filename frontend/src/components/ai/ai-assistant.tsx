@@ -32,20 +32,15 @@ export function AIAssistant() {
   const demoTimerRef = useRef<any>(null)
   const isDemoRunningRef = useRef(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => { 
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) 
-  }, [messages])
+  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   useEffect(() => {
     if (mounted && isOpen && messages.length === 0 && !isDemoMode) {
       setMessages([{
         id: 'welcome',
         role: 'assistant',
-        content: '👋 Hello! I am your AI assistant.\n\n💡 Click "Start Demo" for a 60-second automated tour!\n\nOr ask me to:\n• approve refund for order 12345\n• what are approval thresholds\n• show workflows',
+        content: '👋 Hello! I am your AI assistant.\n\n💡 Click "Start Demo" for a 60-second automated tour!\n\nOr ask me to:\n• approve refund for order 12345\n• create ticket for customer\n• issue payment to vendor\n• show workflows',
         timestamp: new Date(),
       }])
     }
@@ -79,35 +74,36 @@ export function AIAssistant() {
       })
       const data = await response.json()
       return data.reply
-    } catch {
-      return null
-    }
+    } catch { return null }
   }
 
   const processCommand = async (command: string) => {
     if (!command.trim()) return
-    
     setIsProcessing(true)
     const lowerCommand = command.toLowerCase()
-
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: command, timestamp: new Date() }
     setMessages(prev => [...prev, userMsg])
 
     try {
       let response = ''
+      let actionId = ''
+      let actionName = ''
 
+      // ✅ APPROVE REFUND
       if (lowerCommand.includes('approve') && lowerCommand.includes('refund')) {
+        actionId = 'approve_refund'
+        actionName = 'Approve Refund'
         const orderMatch = command.match(/(\d+)/)
         const orderId = orderMatch ? `ORD-${orderMatch[1]}` : `ORD-${Date.now()}`
         const workflow = {
           id: `wf_${Date.now()}`,
-          action_id: 'approve_refund',
-          action_name: 'Approve Refund',
+          action_id: actionId,
+          action_name: actionName,
           status: 'success',
           progress: 100,
           created_at: new Date().toISOString(),
           trace_id: `trace_${Date.now()}`,
-          result: { order_id: orderId },
+          result: { order_id: orderId, type: 'refund' },
           policy_decision: 'ALLOW',
           risk_score: 25,
         }
@@ -115,22 +111,41 @@ export function AIAssistant() {
           const existing = JSON.parse(localStorage.getItem('agentflow_workflows') || '[]')
           existing.unshift(workflow)
           localStorage.setItem('agentflow_workflows', JSON.stringify(existing))
+          const audit = {
+            id: `audit_${Date.now()}`,
+            trace_id: workflow.trace_id,
+            workflow_id: workflow.id,
+            action_id: actionId,
+            action_name: actionName,
+            user_id: 'voice_user',
+            status: 'success',
+            policy_decision: 'ALLOW',
+            risk_score: 25,
+            created_at: new Date().toISOString(),
+            details: { order_id: orderId, type: 'refund' }
+          }
+          const existingAudit = JSON.parse(localStorage.getItem('agentflow_audit_logs') || '[]')
+          existingAudit.unshift(audit)
+          localStorage.setItem('agentflow_audit_logs', JSON.stringify(existingAudit))
           window.dispatchEvent(new Event('storage'))
         }
-        response = `✅ Refund approved for ${orderId}.`
+        response = `✅ ${actionName} for ${orderId}. Workflow: ${workflow.id}`
         speak(response)
         setTimeout(() => router.push('/workflows'), 2000)
       }
+      // ✅ CREATE TICKET
       else if (lowerCommand.includes('create') && lowerCommand.includes('ticket')) {
+        actionId = 'create_ticket'
+        actionName = 'Create Ticket'
         const workflow = {
           id: `wf_${Date.now()}`,
-          action_id: 'create_ticket',
-          action_name: 'Create Ticket',
+          action_id: actionId,
+          action_name: actionName,
           status: 'success',
           progress: 100,
           created_at: new Date().toISOString(),
           trace_id: `trace_${Date.now()}`,
-          result: { ticket_id: `TKT-${Date.now()}` },
+          result: { ticket_id: `TKT-${Date.now()}`, type: 'support' },
           policy_decision: 'ALLOW',
           risk_score: 15,
         }
@@ -138,9 +153,93 @@ export function AIAssistant() {
           const existing = JSON.parse(localStorage.getItem('agentflow_workflows') || '[]')
           existing.unshift(workflow)
           localStorage.setItem('agentflow_workflows', JSON.stringify(existing))
+          const audit = {
+            id: `audit_${Date.now()}`,
+            trace_id: workflow.trace_id,
+            workflow_id: workflow.id,
+            action_id: actionId,
+            action_name: actionName,
+            user_id: 'voice_user',
+            status: 'success',
+            policy_decision: 'ALLOW',
+            risk_score: 15,
+            created_at: new Date().toISOString(),
+            details: { ticket_id: workflow.result.ticket_id, type: 'support' }
+          }
+          const existingAudit = JSON.parse(localStorage.getItem('agentflow_audit_logs') || '[]')
+          existingAudit.unshift(audit)
+          localStorage.setItem('agentflow_audit_logs', JSON.stringify(existingAudit))
           window.dispatchEvent(new Event('storage'))
         }
-        response = `✅ Ticket created: ${workflow.result.ticket_id}`
+        response = `✅ ${actionName}: ${workflow.result.ticket_id}`
+        speak(response)
+        setTimeout(() => router.push('/workflows'), 2000)
+      }
+      // ✅ ISSUE PAYMENT
+      else if (lowerCommand.includes('issue') && lowerCommand.includes('payment')) {
+        actionId = 'issue_payment'
+        actionName = 'Issue Payment'
+        const workflow = {
+          id: `wf_${Date.now()}`,
+          action_id: actionId,
+          action_name: actionName,
+          status: 'success',
+          progress: 100,
+          created_at: new Date().toISOString(),
+          trace_id: `trace_${Date.now()}`,
+          result: { payment_id: `PAY-${Date.now()}`, type: 'vendor_payment' },
+          policy_decision: 'ALLOW',
+          risk_score: 75,
+        }
+        if (typeof window !== 'undefined') {
+          const existing = JSON.parse(localStorage.getItem('agentflow_workflows') || '[]')
+          existing.unshift(workflow)
+          localStorage.setItem('agentflow_workflows', JSON.stringify(existing))
+          const audit = {
+            id: `audit_${Date.now()}`,
+            trace_id: workflow.trace_id,
+            workflow_id: workflow.id,
+            action_id: actionId,
+            action_name: actionName,
+            user_id: 'voice_user',
+            status: 'success',
+            policy_decision: 'ALLOW',
+            risk_score: 75,
+            created_at: new Date().toISOString(),
+            details: { payment_id: workflow.result.payment_id, type: 'vendor_payment' }
+          }
+          const existingAudit = JSON.parse(localStorage.getItem('agentflow_audit_logs') || '[]')
+          existingAudit.unshift(audit)
+          localStorage.setItem('agentflow_audit_logs', JSON.stringify(existingAudit))
+          window.dispatchEvent(new Event('storage'))
+        }
+        response = `✅ ${actionName}: ${workflow.result.payment_id} (HIGH RISK)`
+        speak(response)
+        setTimeout(() => router.push('/workflows'), 2000)
+      }
+      // ✅ ONBOARD EMPLOYEE
+      else if (lowerCommand.includes('onboard') && lowerCommand.includes('employee')) {
+        actionId = 'onboard_employee'
+        actionName = 'Onboard Employee'
+        const workflow = {
+          id: `wf_${Date.now()}`,
+          action_id: actionId,
+          action_name: actionName,
+          status: 'success',
+          progress: 100,
+          created_at: new Date().toISOString(),
+          trace_id: `trace_${Date.now()}`,
+          result: { employee_id: `EMP-${Date.now()}`, type: 'onboarding' },
+          policy_decision: 'ALLOW',
+          risk_score: 35,
+        }
+        if (typeof window !== 'undefined') {
+          const existing = JSON.parse(localStorage.getItem('agentflow_workflows') || '[]')
+          existing.unshift(workflow)
+          localStorage.setItem('agentflow_workflows', JSON.stringify(existing))
+          window.dispatchEvent(new Event('storage'))
+        }
+        response = `✅ ${actionName}: ${workflow.result.employee_id}`
         speak(response)
         setTimeout(() => router.push('/workflows'), 2000)
       }
@@ -154,11 +253,6 @@ export function AIAssistant() {
         speak(response)
         setTimeout(() => router.push('/audit'), 1500)
       }
-      else if (lowerCommand.includes('show') && lowerCommand.includes('orchestration')) {
-        response = `🕸️ Opening orchestration view.`
-        speak(response)
-        setTimeout(() => router.push('/orchestration'), 1500)
-      }
       else if (lowerCommand.includes('hello') || lowerCommand.includes('hi')) {
         response = `👋 Hello! I am your AgentFlow AI assistant. Click "Start Demo" for a 60-second tour!`
         speak(response)
@@ -169,40 +263,28 @@ export function AIAssistant() {
       }
       else {
         const aiResponse = await callOpenAI(command)
-        response = aiResponse || `I can help execute workflows or answer questions. Try "start demo" for a tour!`
+        response = aiResponse || `I can help execute workflows. Try: "approve refund", "create ticket", "issue payment", or "start demo"`
         speak(response)
       }
 
-      const assistantMsg: Message = { 
-        id: (Date.now() + 1).toString(), 
-        role: 'assistant', 
-        content: response, 
-        timestamp: new Date()
-      }
+      const assistantMsg: Message = { id: (Date.now() + 1).toString(), role: 'assistant', content: response, timestamp: new Date() }
       setMessages(prev => [...prev, assistantMsg])
 
     } catch (err: any) {
-      const errorMsg: Message = { 
-        id: (Date.now() + 1).toString(), 
-        role: 'assistant', 
-        content: `❌ Error: ${err.message}`, 
-        timestamp: new Date() 
-      }
+      const errorMsg: Message = { id: (Date.now() + 1).toString(), role: 'assistant', content: `❌ Error: ${err.message}`, timestamp: new Date() }
       setMessages(prev => [...prev, errorMsg])
     } finally {
       setIsProcessing(false)
     }
   }
 
-  // ✅ DEMO STEPS - Simplified for reliability
   const runDemoStep = (step: number) => {
     if (!isDemoRunningRef.current) return
-    
     switch(step) {
       case 0:
         router.push('/dashboard')
-        setMessages(prev => [...prev, { id: `demo_0`, role: 'assistant', content: '🏠 **Step 1/6: Dashboard**\n\nYour command center with metrics and quick access to all features.\n\nMoving to workflow execution...', timestamp: new Date() }])
-        speak('Step 1: Dashboard - Your command center')
+        setMessages(prev => [...prev, { id: `demo_0`, role: 'assistant', content: '🏠 **Step 1/6: Dashboard**\n\nYour command center with metrics.\n\nMoving to workflow execution...', timestamp: new Date() }])
+        speak('Step 1: Dashboard')
         setDemoProgress(17)
         break
       case 1:
@@ -217,32 +299,32 @@ export function AIAssistant() {
           localStorage.setItem('agentflow_audit_logs', JSON.stringify(existingAudit))
           window.dispatchEvent(new Event('storage'))
         }
-        setMessages(prev => [...prev, { id: `demo_1`, role: 'assistant', content: '🤖 **Step 2/6: Workflow Executed**\n\nApprove Refund for ORD-DEMO-001\nAuto-approved (low risk)\nImmutable audit trail created\n\nMoving to workflows page...', timestamp: new Date() }])
-        speak('Step 2: Workflow executed with audit trail')
+        setMessages(prev => [...prev, { id: `demo_1`, role: 'assistant', content: '🤖 **Step 2/6: Workflow Executed**\n\nApprove Refund for ORD-DEMO-001\n\nMoving to workflows...', timestamp: new Date() }])
+        speak('Step 2: Workflow executed')
         setDemoProgress(33)
         break
       case 2:
         router.push('/workflows')
-        setMessages(prev => [...prev, { id: `demo_2`, role: 'assistant', content: '📊 **Step 3/6: Workflows**\n\nReal-time status, progress tracking, trace IDs for compliance.\n\nMoving to audit logs...', timestamp: new Date() }])
-        speak('Step 3: Workflows page with live status')
+        setMessages(prev => [...prev, { id: `demo_2`, role: 'assistant', content: '📊 **Step 3/6: Workflows**\n\nReal-time status and tracking.\n\nMoving to audit logs...', timestamp: new Date() }])
+        speak('Step 3: Workflows page')
         setDemoProgress(50)
         break
       case 3:
         router.push('/audit')
-        setMessages(prev => [...prev, { id: `demo_3`, role: 'assistant', content: '📋 **Step 4/6: Audit Logs**\n\nImmutable trace IDs, policy decisions, risk scores, export to CSV.\n\nMoving to orchestration...', timestamp: new Date() }])
-        speak('Step 4: Audit logs for compliance')
+        setMessages(prev => [...prev, { id: `demo_3`, role: 'assistant', content: '📋 **Step 4/6: Audit Logs**\n\nImmutable compliance trail.\n\nMoving to orchestration...', timestamp: new Date() }])
+        speak('Step 4: Audit logs')
         setDemoProgress(67)
         break
       case 4:
         router.push('/orchestration')
-        setMessages(prev => [...prev, { id: `demo_4`, role: 'assistant', content: '🕸️ **Step 5/6: Live Orchestration**\n\nReal-time agent collaboration visualization with animated flows.\n\nMoving to AI Assistant...', timestamp: new Date() }])
-        speak('Step 5: Live agent orchestration')
+        setMessages(prev => [...prev, { id: `demo_4`, role: 'assistant', content: '🕸️ **Step 5/6: Orchestration**\n\nLive agent network visualization.\n\nMoving to AI Assistant...', timestamp: new Date() }])
+        speak('Step 5: Orchestration')
         setDemoProgress(83)
         break
       case 5:
         router.push('/dashboard')
-        setMessages(prev => [...prev, { id: `demo_5`, role: 'assistant', content: '🤖 **Step 6/6: AI Assistant**\n\nI can execute workflows via voice, answer questions, and navigate.\n\n🎉 **DEMO COMPLETE!**\n\nYou have seen:\n✅ Dashboard\n✅ Workflow Execution  \n✅ Workflows\n✅ Audit Logs\n✅ Orchestration\n✅ AI Assistant\n\nAgentFlow OS is ready for enterprise!', timestamp: new Date() }])
-        speak('Demo complete! AgentFlow OS is ready for enterprise AI governance')
+        setMessages(prev => [...prev, { id: `demo_5`, role: 'assistant', content: '🤖 **Step 6/6: AI Assistant**\n\nVoice + Chat enabled.\n\n🎉 **DEMO COMPLETE!**\n\nAgentFlow OS is ready!', timestamp: new Date() }])
+        speak('Demo complete! AgentFlow OS is ready!')
         setDemoProgress(100)
         break
     }
@@ -255,12 +337,11 @@ export function AIAssistant() {
     setIsOpen(true)
     isDemoRunningRef.current = true
     stopSpeaking()
-    setMessages([{ id: 'demo_start', role: 'assistant', content: '🎬 **Starting 60-Second Demo Tour**\n\nAutomatic platform tour. You can pause or skip anytime.', timestamp: new Date() }])
-    speak('Starting 60-second demo tour of AgentFlow OS')
+    setMessages([{ id: 'demo_start', role: 'assistant', content: '🎬 **Starting 60-Second Demo Tour**', timestamp: new Date() }])
+    speak('Starting 60-second demo tour')
     runDemoStep(0)
   }
 
-  // ✅ Demo timer - runs independently
   useEffect(() => {
     if (isDemoMode && isDemoRunningRef.current && mounted) {
       demoTimerRef.current = setTimeout(() => {
@@ -274,39 +355,14 @@ export function AIAssistant() {
           setCurrentDemoStep(0)
           setDemoProgress(100)
         }
-      }, 10000) // 10 seconds per step = 60 seconds total
+      }, 10000)
     }
     return () => { if (demoTimerRef.current) clearTimeout(demoTimerRef.current) }
   }, [isDemoMode, currentDemoStep, mounted])
 
-  const pauseDemo = () => { 
-    isDemoRunningRef.current = false
-    if (demoTimerRef.current) clearTimeout(demoTimerRef.current)
-    setIsDemoMode(false)
-    stopSpeaking()
-    setMessages(prev => [...prev, { id: 'demo_paused', role: 'assistant', content: '⏸️ **Demo Paused**\n\nClick "Start Demo" to resume.', timestamp: new Date() }])
-  }
-
-  const skipDemoStep = () => { 
-    if (demoTimerRef.current) clearTimeout(demoTimerRef.current)
-    if (currentDemoStep < 5) {
-      const nextStep = currentDemoStep + 1
-      setCurrentDemoStep(nextStep)
-      isDemoRunningRef.current = true
-      setIsDemoMode(true)
-      runDemoStep(nextStep)
-    }
-  }
-
-  const stopDemo = () => { 
-    isDemoRunningRef.current = false
-    if (demoTimerRef.current) clearTimeout(demoTimerRef.current)
-    setIsDemoMode(false)
-    setCurrentDemoStep(0)
-    setDemoProgress(0)
-    stopSpeaking()
-    setMessages(prev => [...prev, { id: 'demo_stopped', role: 'assistant', content: '⏹️ **Demo Stopped**\n\nClick "Start Demo" to restart.', timestamp: new Date() }])
-  }
+  const pauseDemo = () => { isDemoRunningRef.current = false; if (demoTimerRef.current) clearTimeout(demoTimerRef.current); setIsDemoMode(false); stopSpeaking() }
+  const skipDemoStep = () => { if (demoTimerRef.current) clearTimeout(demoTimerRef.current); if (currentDemoStep < 5) { const nextStep = currentDemoStep + 1; setCurrentDemoStep(nextStep); isDemoRunningRef.current = true; setIsDemoMode(true); runDemoStep(nextStep) } }
+  const stopDemo = () => { isDemoRunningRef.current = false; if (demoTimerRef.current) clearTimeout(demoTimerRef.current); setIsDemoMode(false); setCurrentDemoStep(0); setDemoProgress(0); stopSpeaking() }
 
   const startListening = () => {
     if (!mounted) return
@@ -387,7 +443,7 @@ export function AIAssistant() {
                     <Input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Type your message..." className="flex-1 h-10" disabled={isListening||isProcessing||isDemoMode}/>
                     <Button type="submit" disabled={isProcessing||!inputText.trim()} className="bg-blue-600 h-10"><Send className="h-4 w-4"/></Button>
                   </form>
-                  <p className="text-xs text-slate-500 text-center">💬 Type or 🎤 speak: "approve refund" • "show workflows" • "start demo"</p>
+                  <p className="text-xs text-slate-500 text-center">💬 Type or 🎤 speak: "approve refund" • "create ticket" • "issue payment" • "start demo"</p>
                 </div>
               </CardContent>
             </Card>
