@@ -1,4 +1,4 @@
-#  AgentFlow OS
+#  🤖⚙️AgentFlow OS
 
 > **Multi-Agent Governance Middleware** - Enterprise-grade orchestration platform for autonomous agent workflows with policy enforcement, risk assessment, and human-in-the-loop approvals.
 
@@ -658,41 +658,6 @@ cd backend && python -m pytest
 
 ---
 
-## 📄 License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/kartikeya2006jay/agent--flow/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/kartikeya2006jay/agent--flow/discussions)
-- **Documentation**: [docs/](docs/)
-
----
-
-## 🎯 Roadmap
-
-### v0.2.0 (Next)
-- [ ] Real agent connectors (Salesforce, Stripe, etc.)
-- [ ] Database migration system (Alembic)
-- [ ] Advanced policy editor UI
-- [ ] Webhook triggers
-
-### v0.3.0
-- [ ] Multi-step approval chains
-- [ ] Custom agent creation
-- [ ] Prometheus metrics dashboard
-- [ ] Team management & permissions
-
-### v1.0.0
-- [ ] Production-grade scalability
-- [ ] Advanced AI/ML risk scoring
-- [ ] Multi-tenant support
-- [ ] Enterprise SLA guarantees
-
----
-
-**Built by Kartikeya Yadav, Abdul Kalam, Ashna Adeel Siddique, Shivendu Kumar, Riddhi Shah
+**Built by Kartikeya Yadav, Abdul Kalam, Ashna Adeel Siddique, Shivendu Kumar, Riddhi Shah**
 
