@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Bot, ArrowLeft, Search, Filter, RefreshCw, CheckCircle, Clock, Loader2, Eye, Play } from 'lucide-react'
+import { Bot, ArrowLeft, Search, Filter, RefreshCw, CheckCircle, Clock, Loader2, Eye, Play, FileText, Copy, ExternalLink } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface Workflow {
@@ -37,8 +37,8 @@ export default function WorkflowsPage() {
       
       if (parsed.length === 0) {
         const demo: Workflow[] = [
-          { id: `wf_demo_1`, action_id: 'approve_refund', action_name: 'Approve Refund', status: 'completed', progress: 100, created_at: new Date(Date.now()-1800000).toISOString(), trace_id: `trace_${Math.random().toString(36).substring(2,8)}` },
-          { id: `wf_demo_2`, action_id: 'onboard_employee', action_name: 'Onboard Employee', status: 'completed', progress: 100, created_at: new Date(Date.now()-3600000).toISOString(), trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, result: { ticket_id: 'TKT-001' } },
+          { id: `wf_demo_1`, action_id: 'approve_refund', action_name: 'Approve Refund', status: 'completed', progress: 100, created_at: new Date(Date.now()-1800000).toISOString(), trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, result: { order_id: 'ORD-12345', amount: 500, status: 'approved' } },
+          { id: `wf_demo_2`, action_id: 'onboard_employee', action_name: 'Onboard Employee', status: 'completed', progress: 100, created_at: new Date(Date.now()-3600000).toISOString(), trace_id: `trace_${Math.random().toString(36).substring(2,8)}`, result: { employee_id: 'EMP-001', department: 'Engineering' } },
         ]
         setWorkflows(demo)
       } else {
@@ -81,7 +81,6 @@ export default function WorkflowsPage() {
     }
   }, [])
 
-  // ✅ Search by workflow ID, action name, OR trace ID
   const filtered = workflows.filter(w => {
     const okStatus = filter === 'all' || w.status === filter
     const query = searchQuery.toLowerCase()
@@ -99,11 +98,108 @@ export default function WorkflowsPage() {
     running: workflows.filter(w => w.status === 'running').length,
   }
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast({ title: '✅ Copied!', description: 'Copied to clipboard' })
+  }
+
+  // ✅ Beautiful Result Display Component
+  const ResultDisplay = ({ result }: { result: any }) => {
+    if (!result || Object.keys(result).length === 0) return null
+
+    return (
+      <div className="mt-4 pt-4 border-t border-slate-200">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500">
+              <FileText className="h-3.5 w-3.5 text-white"/>
+            </div>
+            <p className="text-sm font-semibold text-slate-700">Execution Result</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-7 text-xs gap-1"
+              onClick={() => copyToClipboard(JSON.stringify(result, null, 2))}
+            >
+              <Copy className="h-3 w-3"/>Copy
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-7 text-xs gap-1"
+              onClick={() => {
+                const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = 'result.json'
+                a.click()
+              }}
+            >
+              <ExternalLink className="h-3 w-3"/>Download
+            </Button>
+          </div>
+        </div>
+        
+        {/* Key-Value Pairs Display */}
+        <div className="grid gap-2">
+          {Object.entries(result).map(([key, value]) => (
+            <motion.div 
+              key={key}
+              initial={{opacity: 0, x: -10}}
+              animate={{opacity: 1, x: 0}}
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-slate-50 to-white border border-slate-200 hover:border-blue-300 transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-blue-500"/>
+                <span className="text-sm font-medium text-slate-600 capitalize">{key.replace(/_/g, ' ')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-slate-900 bg-white px-3 py-1 rounded-md border border-slate-200">
+                  {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => copyToClipboard(String(value))}
+                >
+                  <Copy className="h-3 w-3"/>
+                </Button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Raw JSON Toggle */}
+        <details className="mt-3 group">
+          <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700 flex items-center gap-1">
+            <ExternalLink className="h-3 w-3"/>View Raw JSON
+          </summary>
+          <div className="mt-2 relative">
+            <pre className="text-xs bg-slate-900 text-green-400 p-4 rounded-lg overflow-auto max-h-48 font-mono border border-slate-700">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="absolute top-2 right-2 h-6 text-xs bg-slate-800 text-white hover:bg-slate-700"
+              onClick={() => copyToClipboard(JSON.stringify(result, null, 2))}
+            >
+              <Copy className="h-3 w-3 mr-1"/>Copy
+            </Button>
+          </div>
+        </details>
+      </div>
+    )
+  }
+
   if (isLoading) return <div className="p-6"><Loader2 className="h-8 w-8 animate-spin"/></div>
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Header */}
       <header className="border-b bg-white/80 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -122,7 +218,6 @@ export default function WorkflowsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           <Card className="card">
             <CardContent className="p-4 text-center">
@@ -144,7 +239,6 @@ export default function WorkflowsPage() {
           </Card>
         </div>
 
-        {/* Filters */}
         <Card className="card">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -184,7 +278,6 @@ export default function WorkflowsPage() {
           </CardContent>
         </Card>
 
-        {/* Workflows List */}
         {filtered.length === 0 ? (
           <Card className="card">
             <CardContent className="p-12 text-center">
@@ -215,7 +308,7 @@ export default function WorkflowsPage() {
                   exit={{opacity:0,y:-20}}
                   transition={{delay:i*0.05}}
                 >
-                  <Card className="card border border-slate-200 hover:border-blue-500/50 transition-all">
+                  <Card className="card border border-slate-200 hover:border-blue-500/50 transition-all shadow-sm hover:shadow-md">
                     <CardContent className="p-4">
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div className="flex items-start gap-4 flex-1 min-w-0">
@@ -237,8 +330,11 @@ export default function WorkflowsPage() {
                               {wf.id}
                             </p>
                             {wf.trace_id && (
-                              <p className="text-xs text-slate-400 mt-1 font-mono">
+                              <p className="text-xs text-slate-400 mt-1 font-mono flex items-center gap-1">
                                 Trace: <span className="text-slate-600">{wf.trace_id}</span>
+                                <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => copyToClipboard(wf.trace_id)}>
+                                  <Copy className="h-2.5 w-2.5"/>
+                                </Button>
                               </p>
                             )}
                             <p className="text-xs text-slate-400 mt-1">
@@ -247,7 +343,6 @@ export default function WorkflowsPage() {
                           </div>
                         </div>
                         
-                        {/* Progress Bar */}
                         <div className="lg:w-48">
                           <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
                             <span>Progress</span>
@@ -268,27 +363,16 @@ export default function WorkflowsPage() {
                           )}
                         </div>
                         
-                        {/* Actions */}
                         <div className="flex items-center gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="gap-1"
-                            onClick={() => toast({title:'Workflow Details',description:JSON.stringify(wf.result || {}, null, 2)})}
-                          >
+                          <Button variant="outline" size="sm" className="gap-1">
                             <Eye className="h-4 w-4"/>View
                           </Button>
                         </div>
                       </div>
                       
-                      {/* Result Section */}
+                      {/* ✅ Beautiful Result Display */}
                       {wf.result && Object.keys(wf.result).length > 0 && wf.status !== 'running' && (
-                        <div className="mt-4 pt-4 border-t border-slate-100">
-                          <p className="text-xs font-semibold text-slate-500 mb-2">Result:</p>
-                          <pre className="text-xs bg-slate-50 p-3 rounded overflow-auto max-h-32">
-                            {JSON.stringify(wf.result, null, 2)}
-                          </pre>
-                        </div>
+                        <ResultDisplay result={wf.result}/>
                       )}
                     </CardContent>
                   </Card>
