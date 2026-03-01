@@ -24,10 +24,8 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // Demo mode - any credentials work
       await new Promise(resolve => setTimeout(resolve, 800))
 
-      // Save user session to localStorage
       const user = {
         id: `user_${Date.now()}`,
         username: username || 'demo_user',
@@ -44,7 +42,6 @@ export default function LoginPage() {
         description: `Signed in as ${user.username}`,
       })
 
-      // Redirect to dashboard
       setTimeout(() => router.push('/dashboard'), 800)
 
     } catch (err: any) {
@@ -61,7 +58,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Logo */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30">
             <Bot className="h-8 w-8 text-white"/>
@@ -70,7 +66,6 @@ export default function LoginPage() {
           <p className="text-slate-600">Governed AI Agent Orchestration</p>
         </div>
 
-        {/* Auth Card */}
         <Card className="card shadow-xl border-2 border-slate-200">
           <CardHeader className="space-y-2">
             <CardTitle className="text-xl">{isLogin ? 'Sign In' : 'Create Account'}</CardTitle>
@@ -134,15 +129,14 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        {/* Demo Mode Badge */}
         <div className="text-center space-y-2">
           <Badge className="bg-green-100 text-green-700 border-green-200 gap-2">
             <CheckCircle className="h-3 w-3"/>Demo Mode Active
           </Badge>
           <p className="text-xs text-slate-500">Demo mode: Any credentials work • No data stored on server</p>
+          <button onClick={() => router.push('/about')} className="text-xs text-blue-600 hover:underline">About AgentFlow OS</button>
         </div>
 
-        {/* Features */}
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="p-3 rounded-xl bg-white border border-slate-200">
             <p className="text-2xl font-bold text-blue-600">5+</p>

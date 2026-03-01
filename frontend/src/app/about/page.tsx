@@ -1,402 +1,180 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { config } from '@/lib/config'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Bot, Shield, Database, Layers, Activity, Zap, ArrowRight, CheckCircle, GitBranch, Lock, FileText, TrendingUp, Users, Globe, Award } from 'lucide-react'
-import { RAGChatbot } from '@/components/rag/rag-chatbot'
+import { Button } from '@/components/ui/button'
+import { Bot, Shield, Zap, CheckCircle, ArrowLeft, Users, Clock, Award, Globe, Activity, FileText, Mic, Play } from 'lucide-react'
 
 export default function AboutPage() {
-  // Business value props by industry
-  const valueProps = [
-    {
-      icon: TrendingUp,
-      title: 'Reduce Operational Risk',
-      desc: 'Policy enforcement + human-in-loop approval prevents costly errors before they happen',
-      metrics: '99.7% error prevention • $2.3M avg savings/year',
-      color: 'text-green-600',
-    },
-    {
-      icon: Users,
-      title: 'Scale Agent Teams Safely',
-      desc: 'Deploy 3 → 300 agents without chaos: standardized protocol, governance, audit',
-      metrics: '10x faster deployment • Zero governance debt',
-      color: 'text-blue-600',
-    },
-    {
-      icon: Globe,
-      title: 'Enterprise Compliance Ready',
-      desc: 'Immutable audit trails, GDPR/HIPAA/SOX controls, one-click regulator exports',
-      metrics: 'SOC2 Type II • ISO27001 • HIPAA BAA available',
-      color: 'text-purple-600',
-    },
-    {
-      icon: Award,
-      title: 'ROI in Weeks, Not Months',
-      desc: 'Prebuilt connectors, no-code workflows, usage-based pricing',
-      metrics: 'Avg. 3.2x ROI in first quarter',
-      color: 'text-orange-600',
-    },
+  const router = useRouter()
+
+  const features = [
+    { icon: Zap, title: '5+ Pre-built Agents', desc: 'Support, HR, Finance, IT/Ops, Sales + Custom' },
+    { icon: Shield, title: 'Policy Enforcement', desc: 'Every action evaluated against enterprise policies' },
+    { icon: FileText, title: 'Audit Trails', desc: 'Immutable logs with trace IDs for compliance' },
+    { icon: Activity, title: 'Live Orchestration', desc: 'Real-time multi-agent network visualization' },
+    { icon: Mic, title: 'Voice Commands', desc: 'Execute workflows via voice or chat' },
+    { icon: Play, title: '60s Auto Demo', desc: 'Automated platform tour with narration' },
   ]
 
-  // Target industries with specific use cases
-  const industries = [
-    {
-      name: 'Financial Services',
-      icon: Shield,
-      useCases: [
-        'Automated refund approvals with fraud detection',
-        'Vendor payment workflows with dual approval',
-        'KYC/AML checks integrated into agent decisions',
-      ],
-      compliance: ['PCI-DSS', 'SOX', 'GDPR', 'AML'],
-    },
-    {
-      name: 'Healthcare',
-      icon: Activity,
-      useCases: [
-        'Patient onboarding with HIPAA-compliant data handling',
-        'Prior authorization workflows with policy checks',
-        'Billing dispute resolution with audit trails',
-      ],
-      compliance: ['HIPAA', 'HITECH', 'GDPR'],
-    },
-    {
-      name: 'E-commerce',
-      icon: Zap,
-      useCases: [
-        'Customer support ticket routing with SLA enforcement',
-        'Return processing with inventory sync',
-        'Fraud detection integrated into checkout agents',
-      ],
-      compliance: ['PCI-DSS', 'GDPR', 'CCPA'],
-    },
-    {
-      name: 'Enterprise IT',
-      icon: GitBranch,
-      useCases: [
-        'Employee onboarding with IT provisioning',
-        'Incident response with escalation workflows',
-        'Change management with approval gates',
-      ],
-      compliance: ['SOC2', 'ISO27001', 'NIST'],
-    },
+  const stats = [
+    { value: '5+', label: 'Agents', icon: Users },
+    { value: '100%', label: 'Compliant', icon: CheckCircle },
+    { value: '60s', label: 'Demo Time', icon: Clock },
+    { value: '24/7', label: 'Availability', icon: Globe },
   ]
+
+  const compliance = ['GDPR', 'SOX', 'HIPAA', 'PCI-DSS', 'SOC2', 'ISO27001']
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Navigation */}
-      <nav className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <header className="border-b bg-white/80 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-            <ArrowRight className="h-4 w-4 rotate-180" />
-            <span className="hidden sm:inline">Back to Home</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Bot className="h-6 w-6 text-primary" />
-            <span className="font-bold">{config.app.name}</span>
-          </div>
-          <Link href="/dashboard">
-            <Button size="sm" className="hidden sm:flex">
-              Go to Dashboard
-              <ArrowRight className="h-4 w-4 ml-2" />
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => router.push('/login')} className="gap-1">
+              <ArrowLeft className="h-4 w-4"/>Back to Login
             </Button>
-          </Link>
-        </div>
-      </nav>
-
-      {/* Hero */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-4xl mx-auto"
-        >
-          <Badge className="mb-4">Enterprise AI Governance Platform</Badge>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-            Deploy Agent Swarms{' '}
-            <span className="text-primary">Safely, Compliantly, at Scale</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            AgentFlow OS is the middleware layer that brings governance, security, 
-            and auditability to multi-agent AI systems—so enterprises can scale 
-            from 3 to 300 agents without chaos.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/login?mode=signup">
-              <Button size="lg" className="gap-2">
-                Start Free Trial
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="#architecture">
-              <Button variant="outline" size="lg">View Architecture</Button>
-            </Link>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Value Props */}
-      <section className="container mx-auto px-4 py-16 bg-muted/30 rounded-3xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Why Enterprises Choose AgentFlow</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Built for regulated industries with governance at the core
-          </p>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {valueProps.map((prop, i) => (
-            <motion.div
-              key={prop.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -5 }}
-              className="p-6 bg-background rounded-xl border"
-            >
-              <prop.icon className={`h-10 w-10 ${prop.color} mb-4`} />
-              <h3 className="font-semibold mb-2">{prop.title}</h3>
-              <p className="text-sm text-muted-foreground mb-3">{prop.desc}</p>
-              <Badge variant="secondary" className="text-xs">{prop.metrics}</Badge>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* 4-Plane Architecture */}
-      <section id="architecture" className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">4-Plane Governance Architecture</h2>
-          <p className="text-muted-foreground">How we ensure safety, compliance, and scalability</p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {[
-            {
-              name: 'Interface Plane',
-              icon: Layers,
-              desc: 'User entry point with Action Library, dashboard, and SDKs',
-              features: ['Predefined safe actions', 'Human-in-loop UI', 'Real-time monitoring'],
-            },
-            {
-              name: 'Control Plane',
-              icon: Shield,
-              desc: 'Policy engine, risk assessment, approval workflows, audit logging',
-              features: ['RBAC + ABAC policies', 'Risk scoring engine', 'Immutable audit trail'],
-            },
-            {
-              name: 'Data Plane',
-              icon: Database,
-              desc: 'Workflow orchestration, canonical protocol, inline guardrails',
-              features: ['DAG/parallel execution', 'Schema normalization', 'PII redaction'],
-            },
-            {
-              name: 'Agent Plane',
-              icon: Bot,
-              desc: 'Universal agent connectors with standardized interface',
-              features: ['5 prebuilt connectors', 'Adapter pattern', 'Health monitoring'],
-            },
-          ].map((plane, i) => (
-            <motion.div
-              key={plane.name}
-              initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <plane.icon className="h-6 w-6 text-primary" />
-                <h3 className="font-bold">{plane.name}</h3>
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600">
+                <Bot className="h-5 w-5 text-white"/>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">{plane.desc}</p>
-              <ul className="space-y-2">
-                {plane.features.map((feature) => (
-                  <li key={feature} className="text-sm flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Industry Solutions */}
-      <section className="container mx-auto px-4 py-16 bg-muted/30 rounded-3xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Built for Your Industry</h2>
-          <p className="text-muted-foreground">Preconfigured policies, connectors, and compliance controls</p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {industries.map((industry) => (
-            <Card key={industry.name}>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <industry.icon className="h-6 w-6 text-primary" />
-                  <CardTitle>{industry.name}</CardTitle>
-                </div>
-                <CardDescription>{industry.useCases[0]}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-2">
-                  {industry.useCases.slice(1).map((useCase) => (
-                    <li key={useCase} className="text-sm flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      {useCase}
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex flex-wrap gap-1.5 pt-2 border-t">
-                  {industry.compliance.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Business Model */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Simple, Predictable Pricing</h2>
-          <p className="text-muted-foreground">Scale with usage, no surprise costs</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {[
-            {
-              name: 'Starter',
-              price: '$299/mo',
-              desc: 'For teams getting started',
-              features: ['Up to 3 agents', '1K workflows/month', 'Basic audit logs', 'Email support'],
-              cta: 'Start Free Trial',
-            },
-            {
-              name: 'Professional',
-              price: '$999/mo',
-              desc: 'For growing teams',
-              features: ['Up to 10 agents', '10K workflows/month', 'HITL approvals', 'Advanced audit', 'Priority support'],
-              cta: 'Start Free Trial',
-              popular: true,
-            },
-            {
-              name: 'Enterprise',
-              price: 'Custom',
-              desc: 'For large organizations',
-              features: ['Unlimited agents', 'Custom workflows', 'SSO/SAML', 'Dedicated support', 'SLA guarantees'],
-              cta: 'Contact Sales',
-            },
-          ].map((plan) => (
-            <Card key={plan.name} className={`relative ${plan.popular ? 'border-primary ring-2 ring-primary/20' : ''}`}>
-              {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
-              )}
-              <CardHeader>
-                <CardTitle>{plan.name}</CardTitle>
-                <div className="mt-2">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  {plan.price !== 'Custom' && <span className="text-muted-foreground">/month</span>}
-                </div>
-                <CardDescription>{plan.desc}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-2">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="text-sm flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full" variant={plan.popular ? 'default' : 'outline'}>
-                  {plan.cta}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* RAG Chatbot Section */}
-      <section className="container mx-auto px-4 py-16 bg-muted/30 rounded-3xl">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold mb-2">Ask About AgentFlow</h2>
-          <p className="text-muted-foreground">Our AI assistant can answer questions about features, compliance, pricing, and implementation</p>
-        </div>
-        <div className="max-w-3xl mx-auto">
-          <RAGChatbot 
-            domain="about" 
-            context="AgentFlow OS: governed multi-agent orchestration platform for enterprises"
-            placeholder="Ask about pricing, compliance, integrations, or implementation..."
-          />
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="container mx-auto px-4 py-16">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="bg-primary text-primary-foreground rounded-3xl p-8 md:p-12 text-center"
-        >
-          <h2 className="text-3xl font-bold mb-4">Ready to Govern Your Agents?</h2>
-          <p className="mb-8 opacity-95 max-w-xl mx-auto">
-            Start your free trial today. No credit card required. 
-            Deploy your first governed workflow in under 10 minutes.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/login?mode=signup">
-              <Button size="lg" variant="secondary" className="gap-2">
-                Start Free Trial
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="border-primary-foreground/50">
-                Schedule Demo
-              </Button>
-            </Link>
+              <div>
+                <h1 className="text-xl font-bold">AgentFlow OS</h1>
+                <p className="text-xs text-slate-500">Governed AI Agent Orchestration</p>
+              </div>
+            </div>
           </div>
-          <p className="mt-6 text-sm opacity-80">
-            Trusted by teams at Fortune 500 companies • SOC2 Type II Compliant • 99.99% Uptime SLA
-          </p>
-        </motion.div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>{config.app.name} v{config.app.version} • {config.app.env === 'development' ? 'Development' : 'Production'}</p>
-          <p className="mt-2">
-            <Link href="/" className="hover:text-foreground">Home</Link>
-            {' • '}
-            <Link href="/about" className="hover:text-foreground">About</Link>
-            {' • '}
-            <Link href="/pricing" className="hover:text-foreground">Pricing</Link>
-            {' • '}
-            <Link href="/contact" className="hover:text-foreground">Contact</Link>
-          </p>
-          <p className="mt-4 text-xs">
-            © {new Date().getFullYear()} AgentFlow OS. All rights reserved.
-          </p>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => router.push('/login')}>Sign In</Button>
+            <Button onClick={() => router.push('/login')} className="bg-blue-600 text-white">Get Started</Button>
+          </div>
         </div>
-      </footer>
+      </header>
 
-      {/* Floating RAG Chatbot */}
-      <RAGChatbot 
-        domain="about" 
-        placeholder="Ask about AgentFlow features, pricing, or compliance..."
-        compact={true}
-      />
+      <main className="container mx-auto px-4 py-12 space-y-12">
+        {/* Hero */}
+        <section className="text-center space-y-6">
+          <div className="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30">
+            <Bot className="h-12 w-12 text-white"/>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900">
+            Governed AI Agent Orchestration
+          </h1>
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+            Enterprise-grade platform for safe deployment of AI agent swarms with policy enforcement, 
+            human-in-loop approval, and immutable audit trails.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button onClick={() => router.push('/login')} className="bg-blue-600 text-white px-8 h-12 text-lg">
+              Start Free Trial
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/dashboard')} className="h-12 text-lg">
+              View Demo
+            </Button>
+          </div>
+        </section>
+
+        {/* Stats */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.map((stat) => (
+            <Card key={stat.label} className="card text-center">
+              <CardContent className="p-6">
+                <stat.icon className="h-8 w-8 text-blue-600 mx-auto mb-3"/>
+                <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
+                <div className="text-sm text-slate-500">{stat.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+
+        {/* Features */}
+        <section className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-slate-900">Key Features</h2>
+            <p className="text-slate-600 mt-2">Everything you need for governed AI at enterprise scale</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature) => (
+              <Card key={feature.title} className="card hover:shadow-lg transition-all">
+                <CardHeader>
+                  <div className="p-3 rounded-xl bg-blue-100 w-fit">
+                    <feature.icon className="h-6 w-6 text-blue-600"/>
+                  </div>
+                  <CardTitle className="text-lg mt-3">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-600">{feature.desc}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Compliance */}
+        <section className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-slate-900">Compliance Ready</h2>
+            <p className="text-slate-600 mt-2">Built for enterprise security and regulatory requirements</p>
+          </div>
+          <Card className="card">
+            <CardContent className="p-8">
+              <div className="flex flex-wrap justify-center gap-3">
+                {compliance.map((std) => (
+                  <Badge key={std} className="bg-green-100 text-green-800 border-green-200 px-4 py-2 text-sm">
+                    <CheckCircle className="h-3 w-3 mr-2"/>{std}
+                  </Badge>
+                ))}
+              </div>
+              <div className="grid md:grid-cols-3 gap-6 mt-8">
+                <div className="text-center p-4">
+                  <Shield className="h-8 w-8 text-blue-600 mx-auto mb-3"/>
+                  <h3 className="font-semibold">Policy Engine</h3>
+                  <p className="text-sm text-slate-500 mt-1">Every action evaluated against policies</p>
+                </div>
+                <div className="text-center p-4">
+                  <FileText className="h-8 w-8 text-purple-600 mx-auto mb-3"/>
+                  <h3 className="font-semibold">Audit Logs</h3>
+                  <p className="text-sm text-slate-500 mt-1">Immutable trails with trace IDs</p>
+                </div>
+                <div className="text-center p-4">
+                  <Users className="h-8 w-8 text-green-600 mx-auto mb-3"/>
+                  <h3 className="font-semibold">HITL Approval</h3>
+                  <p className="text-sm text-slate-500 mt-1">Human-in-loop for high-risk actions</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* CTA */}
+        <section className="text-center space-y-6 py-12">
+          <Card className="card bg-gradient-to-br from-blue-600 to-purple-600 text-white border-0">
+            <CardContent className="p-12">
+              <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+              <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
+                Join enterprises using AgentFlow OS for governed AI agent orchestration. 
+                Start your free trial today.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <Button onClick={() => router.push('/login')} className="bg-white text-blue-600 hover:bg-blue-50 px-8 h-12 text-lg">
+                  Create Free Account
+                </Button>
+                <Button variant="outline" onClick={() => router.push('/dashboard')} className="border-white text-white hover:bg-white/10 h-12 text-lg">
+                  View Live Demo
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Footer */}
+        <footer className="text-center text-slate-500 text-sm py-8 border-t">
+          <p>Built for Enterprise AI Governance Hackathon 2026</p>
+          <p className="mt-2">AgentFlow OS v1.0.0 • Governed AI at Enterprise Scale</p>
+        </footer>
+      </main>
     </div>
   )
 }
